@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Authentication + Task Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="auth-container hidden">
+        <div class="animate-spin" style="width: 48px; height: 48px; border: 4px solid #e5e7eb; border-top: 4px solid #4f46e5; border-radius: 50%;"></div>
+    </div>
+
+    <!-- Authentication Screen -->
+    <div id="auth-screen" class="auth-container">
+        <div class="auth-card">
+            <!-- Header -->
+            <div class="auth-header">
+                <div class="auth-icon">
+                    <span class="icon-user" style="font-size: 20px;"></span>
+                </div>
+                <h1 id="auth-title" class="auth-title">ログイン</h1>
+                <p id="auth-subtitle" class="auth-subtitle">アカウントにログインしてください</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="error-message" class="error-message hidden">
+                <span id="error-text"></span>
+            </div>
+
+            <!-- Form -->
+            <form id="auth-form">
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email" class="form-label">メールアドレス</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon icon-mail"></span>
+                        <input
+                            type="email"
+                            id="email"
+                            class="form-input"
+                            placeholder="example@email.com"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password" class="form-label">パスワード</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon icon-lock"></span>
+                        <input
+                            type="password"
+                            id="password"
+                            class="form-input"
+                            placeholder="••••••••"
+                            required
+                        >
+                        <button type="button" id="password-toggle" class="password-toggle">
+                            <span class="icon-eye"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Confirm Password (Registration only) -->
+                <div id="confirm-password-group" class="form-group hidden">
+                    <label for="confirm-password" class="form-label">パスワード確認</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon icon-lock"></span>
+                        <input
+                            type="password"
+                            id="confirm-password"
+                            class="form-input"
+                            placeholder="••••••••"
+                        >
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submit-btn" class="btn btn-primary">
+                    <span id="submit-text">ログイン</span>
+                    <div id="submit-spinner" class="hidden">
+                        <div style="width: 16px; height: 16px; border: 2px solid transparent; border-top: 2px solid white; border-radius: 50%;" class="animate-spin"></div>
+                        <span>処理中...</span>
+                    </div>
+                </button>
+            </form>
+
+            <!-- Mode Toggle -->
+            <div class="mode-toggle">
+                <span id="mode-text">アカウントをお持ちでない方は</span>
+                <button type="button" id="mode-toggle-btn" class="btn-link">アカウント作成</button>
+            </div>
+
+            <!-- Demo Info -->
+            <div class="demo-info">
+                <p class="demo-info-text">デモ版: メモリ内ストレージを使用しています</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Manager Screen -->
+    <div id="task-manager-screen" class="hidden" data-theme="light">
+        <!-- メインヘッダー -->
+        <div class="header">
+            <h1>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                    <path d="m9 16 2 2 4-4"></path>
+                </svg>
+                Advanced Weekly Schedule
+            </h1>
+            <div class="header-controls">
+                <div class="week-info">
+                    <span id="current-week"></span>
+                    <div id="week-stats" style="margin-top: 4px; font-size: 12px;"></div>
+                </div>
+                <div class="controls-group">
+                    <input type="text" class="search-input" id="search-input" placeholder="タスクを検索... (Ctrl+F)">
+                    <select class="filter-select" id="priority-filter">
+                        <option value="">全ての優先度</option>
+                        <option value="high">高優先度</option>
+                        <option value="medium">中優先度</option>
+                        <option value="low">低優先度</option>
+                    </select>
+                    <select class="filter-select" id="project-filter">
+                        <option value="">全てのプロジェクト</option>
+                    </select>
+                </div>
+                <div class="controls-group">
+                    <button class="nav-btn" onclick="navigateWeek(-1)">← 前週</button>
+                    <button class="nav-btn" onclick="navigateWeek(0)">今週</button>
+                    <button class="nav-btn" onclick="navigateWeek(1)">次週 →</button>
+                    <button class="nav-btn primary" onclick="openMultiInput()" id="multi-input-btn" style="display:none;">一括入力</button>
+                    <button class="nav-btn" onclick="toggleTheme()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                    <button class="nav-btn" onclick="openStatsModal()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 3v18h18"></path>
+                            <path d="m19 9-5 5-4-4-3 3"></path>
+                        </svg>
+                    </button>
+                    <button class="nav-btn" onclick="openDataModal()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14,2 14,8 20,8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10,9 9,9 8,9"></polyline>
+                        </svg>
+                    </button>
+                    <button class="nav-btn" onclick="openShortcutsModal()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                    </button>
+                    <button id="task-logout-btn" class="nav-btn">ログアウト</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <div class="container">
+            <div class="schedule-grid" id="schedule-grid">
+                <div class="day-column" id="day-0"></div>
+                <div class="day-column" id="day-1"></div>
+                <div class="day-column" id="day-2"></div>
+                <div class="day-column" id="day-3"></div>
+                <div class="day-column" id="day-4"></div>
+                <div class="day-column" id="day-5"></div>
+                <div class="day-column" id="day-6"></div>
+            </div>
+        </div>
+
+        <!-- タスク編集モーダル -->
+        <div class="modal-overlay" id="task-modal">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3>タスクを編集</h3>
+                    <button class="close-btn" onclick="closeTaskModal()">×</button>
+                </div>
+                <form id="task-form">
+                    <div class="form-group">
+                        <label for="task-text">タスク内容</label>
+                        <textarea class="form-textarea" id="task-text" rows="3" placeholder="タスクの詳細を入力..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="task-priority">優先度</label>
+                            <select class="form-select" id="task-priority">
+                                <option value="low">低</option>
+                                <option value="medium">中</option>
+                                <option value="high">高</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="task-project">プロジェクト</label>
+                            <input type="text" class="form-input" id="task-project" placeholder="プロジェクト名">
+                        </div>
+                    </div>
+                    <div class="dialog-buttons">
+                        <button type="button" class="dialog-btn" onclick="deleteCurrentTask()">削除</button>
+                        <button type="button" class="dialog-btn" onclick="closeTaskModal()">キャンセル</button>
+                        <button type="submit" class="dialog-btn primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 一括入力モーダル -->
+        <div class="modal-overlay" id="multi-input-modal">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3>選択した日付に一括入力</h3>
+                    <button class="close-btn" onclick="closeMultiInput()">×</button>
+                </div>
+                <div class="form-group">
+                    <label>選択中の日付</label>
+                    <div id="selected-slots-display" style="padding: 10px; background: var(--bg-tertiary); border-radius: 4px; font-size: 12px;"></div>
+                </div>
+                <div class="form-group">
+                    <label for="multi-task-text">タスク内容</label>
+                    <textarea class="form-textarea" id="multi-task-text" rows="3" placeholder="選択した全ての日付に追加するタスクを入力..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="multi-task-priority">優先度</label>
+                        <select class="form-select" id="multi-task-priority">
+                            <option value="low">低</option>
+                            <option value="medium">中</option>
+                            <option value="high">高</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="multi-task-project">プロジェクト</label>
+                        <input type="text" class="form-input" id="multi-task-project" placeholder="プロジェクト名">
+                    </div>
+                </div>
+                <div class="dialog-buttons">
+                    <button type="button" class="dialog-btn" onclick="closeMultiInput()">キャンセル</button>
+                    <button type="button" class="dialog-btn primary" onclick="applyMultiInput()">適用</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 統計モーダル -->
+        <div class="modal-overlay" id="stats-modal">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3>統計ダッシュボード</h3>
+                    <button class="close-btn" onclick="closeStatsModal()">×</button>
+                </div>
+                <div class="stats-grid" id="stats-content"></div>
+            </div>
+        </div>
+
+        <!-- データ管理モーダル -->
+        <div class="modal-overlay" id="data-modal">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3>データ管理</h3>
+                    <button class="close-btn" onclick="closeDataModal()">×</button>
+                </div>
+                <div class="form-group">
+                    <label>データのエクスポート</label>
+                    <button class="dialog-btn primary" onclick="exportData()" style="width: 100%;">JSONでダウンロード</button>
+                </div>
+                <div class="form-group">
+                    <label for="import-file">データのインポート</label>
+                    <input type="file" id="import-file" accept=".json" onchange="importData(event)">
+                </div>
+                <div class="form-group">
+                    <label>データの削除</label>
+                    <button class="dialog-btn" onclick="clearAllData()" style="width: 100%; color: var(--danger);">全てのデータを削除</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ショートカットモーダル -->
+        <div class="modal-overlay" id="shortcuts-modal">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3>キーボードショートカット</h3>
+                    <button class="close-btn" onclick="closeShortcutsModal()">×</button>
+                </div>
+                <div class="shortcuts-list">
+                    <div class="shortcut-item">
+                        <span>統計表示</span>
+                        <span class="shortcut-key">Ctrl + S</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span>データ管理</span>
+                        <span class="shortcut-key">Ctrl + E</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js" defer></script>
+</body>
+</html>
