@@ -1,6 +1,7 @@
 # ToDoApp
 
 これは、HTML、CSS、JavaScriptで作成された、シンプルで直感的なToDo管理アプリケーションです。
+<img src="images/start-screen.png" alt="スタート画面" width="100%"/>
 
 ## 概要
 
