@@ -14,12 +14,12 @@
     <td width="50%">
   <h3>ログイン機能の実装</h3>
   <p>ユーザー認証機能を実装し、タスクを安全に管理できます。</p>
-    <img src="images/rogin-screenshot.png" alt="ログイン機能" width="100%"/>
+    <img src="images/rogin-screen.png" alt="ログイン機能" width="100%"/>
 </td>
     <td width="50%">
   <h3>シンプルなデザイン</h3>
   <p>クリーンで使いやすいインターフェースにより、快適なユーザー体験を提供します。</p>
-  　<img src="images/design-screenshot.png" alt="デザイン" width="100%"/>
+  　<img src="images/design-screen.png" alt="デザイン" width="100%"/>
 </td>
   </tr>
   <tr>
@@ -31,7 +31,7 @@
     <td width="50%">
       <h3>細かな機能の実装</h3>
       <p>タスクの追加や削除といったToDo管理に不可欠な機能の他に、</p>
-      <img src="images/Radarchart-screenshot.png" alt="細かな機能" width="100%"/>
+      <img src="images/Radarchart-screen.png" alt="細かな機能" width="100%"/>
     </td>
   </tr>
 </table>
